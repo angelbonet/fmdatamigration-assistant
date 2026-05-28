@@ -1,0 +1,976 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FMDataMigration Assistant</title>
+<style>
+:root {
+  --bg:#0f0f0f; --surface:#1a1a1a; --surface2:#242424;
+  --border:#2e2e2e; --border2:#3a3a3a;
+  --text:#e8e6e0; --text2:#888; --text3:#555;
+  --accent:#4a9eff; --accent-dim:#1a3a5c;
+  --success:#3cb371; --warning:#e8a020;
+  --danger:#e05050;
+  --font:'SF Mono','JetBrains Mono','Fira Mono',monospace;
+  --sans:-apple-system,'Segoe UI',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14px;min-height:100vh;}
+
+/* HEADER */
+.header{background:var(--surface);border-bottom:1px solid var(--border);padding:13px 22px;display:flex;align-items:center;gap:11px;}
+.hico{width:29px;height:29px;background:var(--accent);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;}
+.header h1{font-family:var(--font);font-size:13px;font-weight:600;letter-spacing:.03em;}
+.header p{font-size:11px;color:var(--text2);margin-top:1px;}
+.header-right{margin-left:auto;display:flex;gap:8px;align-items:center;}
+
+/* LAYOUT */
+.layout{display:grid;grid-template-columns:205px 1fr 0px;min-height:calc(100vh - 56px);transition:grid-template-columns .25s ease;}
+.layout.help-open{grid-template-columns:205px 1fr 320px;}
+
+/* SIDEBAR */
+.sidebar{background:var(--surface);border-right:1px solid var(--border);padding:13px 0;overflow-y:auto;}
+.sb-lbl{font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);padding:0 13px 7px;}
+.preset{padding:7px 13px;cursor:pointer;display:flex;align-items:center;gap:7px;border-left:2px solid transparent;font-size:12px;color:var(--text2);}
+.preset:hover{background:var(--surface2);color:var(--text);}
+.preset.active{background:var(--accent-dim);border-left-color:var(--accent);color:var(--accent);}
+.preset-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.preset-del{opacity:0;background:none;border:none;color:var(--danger);cursor:pointer;font-size:12px;padding:1px 4px;border-radius:3px;}
+.preset:hover .preset-del{opacity:1;}
+.btn-new{margin:9px 13px 0;width:calc(100% - 26px);padding:7px 10px;background:var(--surface2);border:1px solid var(--border2);color:var(--text2);border-radius:6px;font-size:12px;cursor:pointer;font-family:var(--sans);display:flex;align-items:center;gap:5px;}
+.btn-new:hover{border-color:var(--accent);color:var(--accent);}
+
+/* MAIN */
+.main{padding:18px 22px;display:flex;flex-direction:column;gap:14px;max-width:820px;overflow-y:auto;}
+
+/* HELP PANEL */
+.help-panel{background:var(--surface);border-left:1px solid var(--border);overflow:hidden;display:flex;flex-direction:column;}
+.help-panel-inner{padding:0;flex:1;overflow-y:auto;width:320px;}
+.hp-head{padding:13px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;position:sticky;top:0;background:var(--surface);z-index:1;}
+.hp-flag{font-family:var(--font);font-size:13px;font-weight:600;color:var(--accent);flex:1;}
+.hp-close{background:none;border:none;color:var(--text3);cursor:pointer;font-size:16px;padding:2px 6px;border-radius:4px;line-height:1;}
+.hp-close:hover{color:var(--text);background:var(--surface2);}
+.hp-body{padding:14px 16px;display:flex;flex-direction:column;gap:12px;}
+.hp-section-title{font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);margin-bottom:5px;}
+.hp-desc{font-size:13px;color:var(--text2);line-height:1.65;}
+.hp-desc strong{color:var(--text);font-weight:500;}
+.hp-tag{display:inline-block;font-family:var(--font);font-size:11px;background:var(--surface2);border:1px solid var(--border2);border-radius:4px;padding:2px 7px;color:#90c8ff;margin:2px 2px 2px 0;}
+.hp-warn{background:rgba(232,160,32,.1);border:1px solid rgba(232,160,32,.25);border-radius:6px;padding:8px 10px;font-size:12px;color:var(--warning);line-height:1.55;}
+.hp-tip{background:rgba(74,158,255,.08);border:1px solid rgba(74,158,255,.2);border-radius:6px;padding:8px 10px;font-size:12px;color:#90c8ff;line-height:1.55;}
+.hp-required{display:inline-block;font-size:10px;background:rgba(224,80,80,.15);color:var(--danger);border:1px solid rgba(224,80,80,.3);border-radius:4px;padding:1px 6px;margin-left:4px;}
+.hp-optional{display:inline-block;font-size:10px;background:rgba(136,136,136,.1);color:var(--text3);border:1px solid var(--border);border-radius:4px;padding:1px 6px;margin-left:4px;}
+.hp-link{font-size:11px;color:var(--accent);text-decoration:none;display:inline-flex;align-items:center;gap:4px;margin-top:4px;}
+.hp-link:hover{text-decoration:underline;}
+
+/* CARDS */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:9px;overflow:hidden;}
+.card-head{padding:9px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:7px;}
+.card-title{font-size:10px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--text2);}
+.card-body{padding:13px 14px;}
+.g1{display:grid;grid-template-columns:1fr;gap:10px;}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+
+/* FIELDS */
+.field{display:flex;flex-direction:column;gap:4px;}
+.field-lbl{display:flex;align-items:center;gap:5px;}
+.field-lbl label{font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--text3);}
+.req{color:var(--danger);margin-left:1px;}
+.help-btn{width:15px;height:15px;border-radius:50%;background:var(--surface2);border:1px solid var(--border2);color:var(--text3);cursor:pointer;font-size:9px;font-weight:700;font-family:var(--sans);display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s;line-height:1;padding:0;}
+.help-btn:hover{background:var(--accent-dim);border-color:var(--accent);color:var(--accent);}
+.help-btn.active{background:var(--accent-dim);border-color:var(--accent);color:var(--accent);}
+.frow{display:flex;gap:6px;}
+.frow input{flex:1;min-width:0;}
+
+input[type=text],input[type=password],select{
+  background:var(--surface2);border:1px solid var(--border2);color:var(--text);
+  padding:7px 9px;border-radius:6px;font-size:12px;font-family:var(--font);
+  width:100%;outline:none;transition:border-color .15s;
+}
+select{font-family:var(--sans);font-size:12px;}
+input:focus,select:focus{border-color:var(--accent);}
+input::placeholder{color:var(--text3);}
+
+/* OPCIONES */
+.opts-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;}
+.opt{display:flex;align-items:flex-start;gap:8px;padding:9px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:7px;cursor:pointer;user-select:none;transition:border-color .1s;}
+.opt:hover{border-color:var(--border2);}
+.opt.on{border-color:var(--accent);background:var(--accent-dim);}
+.opt-box{width:15px;height:15px;border:1.5px solid var(--border2);border-radius:4px;flex-shrink:0;margin-top:2px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;background:var(--surface);transition:all .1s;color:transparent;}
+.opt.on .opt-box{background:var(--accent);border-color:var(--accent);color:white;}
+.opt-content{flex:1;min-width:0;}
+.opt-top{display:flex;align-items:center;gap:5px;margin-bottom:2px;}
+.opt-flag{font-family:var(--font);font-size:11px;font-weight:600;color:var(--text2);}
+.opt.on .opt-flag{color:#90c8ff;}
+.opt-desc{font-size:11px;color:var(--text2);line-height:1.4;}
+.opt .help-btn{margin-left:auto;flex-shrink:0;}
+
+/* CMD */
+.cmd-box{background:#0a0a0a;border:1px solid var(--border);border-radius:7px;padding:11px 13px;font-family:var(--font);font-size:12px;color:#a0d4ff;line-height:1.8;word-break:break-all;white-space:pre-wrap;min-height:60px;}
+.cg{color:#7cde8a;} .cy{color:#ffcc66;}
+.btn-row{display:flex;gap:7px;margin-top:9px;flex-wrap:wrap;}
+
+/* BOTONES */
+.btn{padding:7px 13px;border-radius:7px;font-size:12px;font-weight:500;cursor:pointer;border:1px solid transparent;font-family:var(--sans);display:flex;align-items:center;gap:5px;transition:all .1s;}
+.btn:active{transform:scale(.98);}
+.btn-ghost{background:var(--surface2);color:var(--text2);border-color:var(--border2);}
+.btn-ghost:hover{color:var(--text);border-color:#555;}
+.btn-run{background:var(--success);color:white;border-color:var(--success);padding:7px 16px;font-size:13px;}
+.btn-run:hover{background:#4bc882;}
+
+/* TOGGLE */
+.toggle-row{display:flex;align-items:center;gap:11px;padding:8px 11px;background:var(--surface2);border:1px solid var(--border);border-radius:7px;margin-bottom:9px;cursor:pointer;}
+.toggle-lbl{flex:1;font-size:13px;}
+.tog{width:32px;height:17px;background:var(--border2);border-radius:9px;position:relative;transition:background .2s;flex-shrink:0;}
+.tog.on{background:var(--success);}
+.tog::after{content:'';position:absolute;width:11px;height:11px;background:white;border-radius:50%;top:3px;left:3px;transition:left .2s;}
+.tog.on::after{left:18px;}
+
+/* STATUS / SAVE */
+.status{padding:7px 14px;border-top:1px solid var(--border);display:flex;align-items:center;gap:7px;font-size:11px;font-family:var(--font);color:var(--text2);min-height:32px;}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--text3);flex-shrink:0;}
+.dot.ok{background:var(--success);}
+.dot.err{background:var(--danger);}
+.dot.run{background:var(--accent);animation:blink 1s infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+.save-bar{display:flex;gap:7px;align-items:center;padding:9px 14px;border-top:1px solid var(--border);flex-wrap:wrap;}
+.save-bar input{max-width:170px;font-family:var(--sans);}
+.hint{background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:9px 11px;font-size:11px;color:var(--text2);line-height:1.7;margin-top:9px;}
+.hint strong{color:var(--warning);}
+.hint code{font-family:var(--font);color:#90c8ff;background:rgba(74,158,255,.1);padding:1px 4px;border-radius:3px;}
+.note{font-size:11px;color:var(--text3);margin-top:6px;line-height:1.5;}
+
+/* NOTIF */
+.notif{position:fixed;top:13px;right:13px;background:var(--surface);border:1px solid var(--border2);border-radius:9px;padding:10px 13px;font-size:12px;max-width:290px;z-index:999;display:flex;gap:8px;box-shadow:0 6px 20px rgba(0,0,0,.5);transform:translateX(330px);transition:transform .3s cubic-bezier(.34,1.56,.64,1);}
+.notif.show{transform:translateX(0);}
+.notif.ok{border-color:var(--success);}
+.notif.err{border-color:var(--danger);}
+.notif-ico{font-size:15px;}
+.notif-ttl{font-weight:600;margin-bottom:2px;}
+.notif-msg{color:var(--text2);font-size:11px;line-height:1.4;}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="hico">⇄</div>
+  <div>
+    <h1>FMDataMigration Assistant</h1>
+    <p>Interfaz gráfica para Claris FileMaker Data Migration Tool</p>
+  </div>
+  <div class="header-right">
+    <button class="btn btn-ghost" id="btn-version">Ver versión</button>
+    <button class="btn btn-run" id="btn-run">▶ Generar script</button>
+  </div>
+</div>
+
+<div class="layout" id="layout">
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="sb-lbl">Configuraciones</div>
+    <div id="presets-list"></div>
+    <button class="btn-new" id="btn-new-preset">＋ Nueva</button>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+
+    <!-- EJECUTABLE -->
+    <div class="card">
+      <div class="card-head"><span>⚙</span><span class="card-title">Ejecutable</span></div>
+      <div class="card-body g1">
+        <div class="field">
+          <div class="field-lbl">
+            <label>Ruta del ejecutable FMDataMigration</label>
+            <button class="help-btn" data-help="binary">?</button>
+          </div>
+          <input type="text" id="binary_path" value="/Users/admin/Desktop/202605Update/FMDataMigration" placeholder="/ruta/a/FMDataMigration">
+        </div>
+      </div>
+    </div>
+
+    <!-- ARCHIVOS -->
+    <div class="card">
+      <div class="card-head"><span>📁</span><span class="card-title">Archivos</span></div>
+      <div class="card-body g2">
+        <div class="field">
+          <div class="field-lbl">
+            <label>Fuente <span class="req">*</span></label>
+            <code style="font-size:10px;color:var(--text3);font-family:var(--font)">-src_path</code>
+            <button class="help-btn" data-help="src_path">?</button>
+          </div>
+          <input type="text" id="src_path" value="/Users/admin/Desktop/202605Update/VC.fmp12" placeholder="/ruta/Origen.fmp12">
+        </div>
+        <div class="field">
+          <div class="field-lbl">
+            <label>Clon <span class="req">*</span></label>
+            <code style="font-size:10px;color:var(--text3);font-family:var(--font)">-clone_path</code>
+            <button class="help-btn" data-help="clone_path">?</button>
+          </div>
+          <input type="text" id="clone_path" value="/Users/admin/Desktop/202605Update/VC Clonar.fmp12" placeholder="/ruta/Clon.fmp12">
+        </div>
+        <div class="field">
+          <div class="field-lbl">
+            <label>Destino</label>
+            <code style="font-size:10px;color:var(--text3);font-family:var(--font)">-target_path</code>
+            <button class="help-btn" data-help="target_path">?</button>
+          </div>
+          <input type="text" id="target_path" placeholder="Por defecto: origen_migrated.fmp12">
+        </div>
+        <div class="field">
+          <div class="field-lbl">
+            <label>Carpeta plugins</label>
+            <code style="font-size:10px;color:var(--text3);font-family:var(--font)">-plugin_folder</code>
+            <button class="help-btn" data-help="plugin_folder">?</button>
+          </div>
+          <input type="text" id="plugin_folder" placeholder="/ruta/carpeta/plugins">
+        </div>
+      </div>
+    </div>
+
+    <!-- CREDENCIALES -->
+    <div class="card">
+      <div class="card-head"><span>🔑</span><span class="card-title">Credenciales de acceso</span></div>
+      <div class="card-body g2">
+        <div class="field">
+          <div class="field-lbl">
+            <label>Cuenta fuente</label>
+            <code style="font-size:10px;color:var(--text3);font-family:var(--font)">-src_account</code>
+            <button class="help-btn" data-help="src_account">?</button>
+          </div>
+          <input type="text" id="src_account" value="admin" placeholder="admin">
+        </div>
+        <div class="field">
+          <div class="field-lbl">
+            <label>Password fuente</label>
+            <code style="font-size:10px;color:var(--text3);font-family:var(--font)">-src_pwd</code>
+            <button class="help-btn" data-help="src_pwd">?</button>
+          </div>
+          <input type="password" id="src_pwd" value="caronte1910">
+        </div>
+        <div class="field">
+          <div class="field-lbl">
+            <label>Cuenta clon</label>
+            <code style="font-size:10px;color:var(--text3);font-family:var(--font)">-clone_account</code>
+            <button class="help-btn" data-help="clone_account">?</button>
+          </div>
+          <input type="text" id="clone_account" value="admin" placeholder="admin">
+        </div>
+        <div class="field">
+          <div class="field-lbl">
+            <label>Password clon</label>
+            <code style="font-size:10px;color:var(--text3);font-family:var(--font)">-clone_pwd</code>
+            <button class="help-btn" data-help="clone_pwd">?</button>
+          </div>
+          <input type="password" id="clone_pwd" value="caronte1910">
+        </div>
+      </div>
+    </div>
+
+    <!-- CIFRADO -->
+    <div class="card">
+      <div class="card-head"><span>🔒</span><span class="card-title">Contraseñas de cifrado (Encryption at Rest)</span></div>
+      <div class="card-body g2">
+        <div class="field">
+          <div class="field-lbl">
+            <label>Clave cifrado fuente</label>
+            <code style="font-size:10px;color:var(--text3);font-family:var(--font)">-src_key</code>
+            <button class="help-btn" data-help="src_key">?</button>
+          </div>
+          <input type="password" id="src_key" placeholder="Solo si el archivo fuente está cifrado">
+        </div>
+        <div class="field">
+          <div class="field-lbl">
+            <label>Clave cifrado clon</label>
+            <code style="font-size:10px;color:var(--text3);font-family:var(--font)">-clone_key</code>
+            <button class="help-btn" data-help="clone_key">?</button>
+          </div>
+          <input type="password" id="clone_key" placeholder="Solo si el archivo clon está cifrado">
+        </div>
+      </div>
+    </div>
+
+    <!-- OPCIONES -->
+    <div class="card">
+      <div class="card-head"><span>⚡</span><span class="card-title">Opciones</span></div>
+      <div class="card-body">
+        <div class="opts-grid">
+          <div class="opt on" data-flag="ignore_fonts">
+            <div class="opt-box">✓</div>
+            <div class="opt-content">
+              <div class="opt-top"><span class="opt-flag">-ignore_fonts</span><button class="help-btn" data-help="ignore_fonts">?</button></div>
+              <span class="opt-desc">No comprobar mapeo de fuentes en los campos</span>
+            </div>
+          </div>
+          <div class="opt on" data-flag="ignore_accounts">
+            <div class="opt-box">✓</div>
+            <div class="opt-content">
+              <div class="opt-top"><span class="opt-flag">-ignore_accounts</span><button class="help-btn" data-help="ignore_accounts">?</button></div>
+              <span class="opt-desc">Usar cuentas y passwords del clon en lugar del origen</span>
+            </div>
+          </div>
+          <div class="opt" data-flag="ignore_valuelists">
+            <div class="opt-box"></div>
+            <div class="opt-content">
+              <div class="opt-top"><span class="opt-flag">-ignore_valuelists</span><button class="help-btn" data-help="ignore_valuelists">?</button></div>
+              <span class="opt-desc">Usar listas de valores del clon en lugar del origen</span>
+            </div>
+          </div>
+          <div class="opt on" data-flag="verbose">
+            <div class="opt-box">✓</div>
+            <div class="opt-content">
+              <div class="opt-top"><span class="opt-flag">-v &nbsp;verbose</span><button class="help-btn" data-help="verbose">?</button></div>
+              <span class="opt-desc">Informe detallado del proceso de migración</span>
+            </div>
+          </div>
+          <div class="opt" data-flag="quiet">
+            <div class="opt-box"></div>
+            <div class="opt-content">
+              <div class="opt-top"><span class="opt-flag">-q &nbsp;quiet</span><button class="help-btn" data-help="quiet">?</button></div>
+              <span class="opt-desc">Sin informe. Incompatible con -v</span>
+            </div>
+          </div>
+          <div class="opt on" data-flag="rebuildindexes">
+            <div class="opt-box">✓</div>
+            <div class="opt-content">
+              <div class="opt-top"><span class="opt-flag">-rebuildindexes</span><button class="help-btn" data-help="rebuildindexes">?</button></div>
+              <span class="opt-desc">Reconstruir índices durante la migración</span>
+            </div>
+          </div>
+          <div class="opt" data-flag="reevaluate">
+            <div class="opt-box"></div>
+            <div class="opt-content">
+              <div class="opt-top"><span class="opt-flag">-reevaluate</span><button class="help-btn" data-help="reevaluate">?</button></div>
+              <span class="opt-desc">Reevaluar todos los cálculos almacenados</span>
+            </div>
+          </div>
+          <div class="opt" data-flag="force">
+            <div class="opt-box"></div>
+            <div class="opt-content">
+              <div class="opt-top"><span class="opt-flag">-force</span><button class="help-btn" data-help="force">?</button></div>
+              <span class="opt-desc">Sobreescribir el archivo destino si ya existe</span>
+            </div>
+          </div>
+        </div>
+        <p class="note">⚠ -v y -q son incompatibles. Activar uno desactiva el otro automáticamente.</p>
+      </div>
+    </div>
+
+    <!-- LOCALE -->
+    <div class="card">
+      <div class="card-head"><span>🌐</span><span class="card-title">Locale del archivo destino</span></div>
+      <div class="card-body g2">
+        <div class="field">
+          <div class="field-lbl">
+            <label>Locale</label>
+            <code style="font-size:10px;color:var(--text3);font-family:var(--font)">-target_locale</code>
+            <button class="help-btn" data-help="target_locale">?</button>
+          </div>
+          <select id="target_locale_select">
+            <option value="">— Sin especificar —</option>
+            <option value="System">System</option>
+            <option value="Arabic">Arabic</option><option value="Bengali">Bengali</option>
+            <option value="Bulgarian">Bulgarian</option><option value="Catalan">Catalan</option>
+            <option value="Chinese">Chinese</option><option value="Croatian">Croatian</option>
+            <option value="Czech">Czech</option><option value="Danish">Danish</option>
+            <option value="Dutch">Dutch</option><option value="English">English</option>
+            <option value="Estonian">Estonian</option><option value="Finnish">Finnish</option>
+            <option value="French">French</option><option value="German">German</option>
+            <option value="Greek">Greek</option><option value="Gujarati">Gujarati</option>
+            <option value="Hebrew">Hebrew</option><option value="Hindi">Hindi</option>
+            <option value="Hungarian">Hungarian</option><option value="Icelandic">Icelandic</option>
+            <option value="Italian">Italian</option><option value="Japanese">Japanese</option>
+            <option value="Kannada">Kannada</option><option value="Korean">Korean</option>
+            <option value="Latvian">Latvian</option><option value="Lithuanian">Lithuanian</option>
+            <option value="Malayalam">Malayalam</option><option value="Marathi">Marathi</option>
+            <option value="Norwegian">Norwegian</option><option value="Panjabi">Panjabi</option>
+            <option value="Persian">Persian</option><option value="Polish">Polish</option>
+            <option value="Portuguese">Portuguese</option><option value="Romanian">Romanian</option>
+            <option value="Russian">Russian</option><option value="Serbian">Serbian</option>
+            <option value="Slovak">Slovak</option><option value="Slovenian">Slovenian</option>
+            <option value="Spanish">Spanish</option><option value="Swedish">Swedish</option>
+            <option value="Tamil">Tamil</option><option value="Telugu">Telugu</option>
+            <option value="Thai">Thai</option><option value="Turkish">Turkish</option>
+            <option value="Ukrainian">Ukrainian</option><option value="Vietnamese">Vietnamese</option>
+            <option value="__file__">Ruta a fichero JSON de locale…</option>
+          </select>
+        </div>
+        <div class="field" id="locale-file-field" style="display:none">
+          <div class="field-lbl"><label>Ruta al fichero JSON</label></div>
+          <input type="text" id="target_locale_file" placeholder="/ruta/al/locale.json">
+        </div>
+      </div>
+    </div>
+
+    <!-- PUSHOVER -->
+    <div class="card">
+      <div class="card-head"><span>🔔</span><span class="card-title">Notificación Pushover</span></div>
+      <div class="card-body">
+        <div class="toggle-row" id="toggle-pushover">
+          <span class="toggle-lbl">Enviar push al móvil al terminar</span>
+          <div class="tog on" id="tog-push"></div>
+        </div>
+        <div id="pushover-fields">
+          <div class="g2" style="margin-bottom:9px">
+            <div class="field">
+              <div class="field-lbl"><label>User Key</label><button class="help-btn" data-help="pushover_user">?</button></div>
+              <input type="password" id="pushover_user" placeholder="u•••••••••••••••••••••••••••••">
+            </div>
+            <div class="field">
+              <div class="field-lbl"><label>API Token</label><button class="help-btn" data-help="pushover_token">?</button></div>
+              <input type="password" id="pushover_token" placeholder="a•••••••••••••••••••••••••••••">
+            </div>
+          </div>
+          <div class="field">
+            <div class="field-lbl"><label>Mensaje personalizado (opcional)</label></div>
+            <input type="text" id="pushover_msg" placeholder="Migración FileMaker completada ✓">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- COMANDO -->
+    <div class="card">
+      <div class="card-head"><span>$_</span><span class="card-title">Comando generado</span></div>
+      <div class="card-body">
+        <div class="cmd-box" id="cmd-box">—</div>
+        <div class="btn-row">
+          <button class="btn btn-ghost" id="btn-copy">📋 Copiar</button>
+          <button class="btn btn-ghost" id="btn-sh">💾 Descargar .sh</button>
+        </div>
+        <div class="hint">
+          <strong>Cómo ejecutar:</strong> Descarga el <code>.sh</code> → en Terminal: <code>chmod +x fm_migrate.sh &amp;&amp; ./fm_migrate.sh</code><br>
+          El script incluye la notificación Pushover automáticamente al terminar (éxito o fallo).
+        </div>
+      </div>
+      <div class="status">
+        <div class="dot" id="status-dot"></div>
+        <span id="status-txt">Listo</span>
+      </div>
+    </div>
+
+    <!-- GUARDAR -->
+    <div class="save-bar">
+      <input type="text" id="preset-name" placeholder="Nombre de esta configuración…">
+      <button class="btn btn-ghost" id="btn-save">💾 Guardar</button>
+      <button class="btn btn-ghost" id="btn-export">📤 Exportar JSON</button>
+      <button class="btn btn-ghost" id="btn-import">📥 Importar JSON</button>
+    </div>
+
+  </div><!-- /main -->
+
+  <!-- PANEL AYUDA -->
+  <div class="help-panel" id="help-panel">
+    <div class="help-panel-inner" id="help-panel-inner">
+      <div class="hp-head">
+        <span class="hp-flag" id="hp-flag">Ayuda</span>
+        <button class="hp-close" id="hp-close">✕</button>
+      </div>
+      <div class="hp-body" id="hp-body"></div>
+    </div>
+  </div>
+
+</div><!-- /layout -->
+
+<div class="notif" id="notif">
+  <div class="notif-ico" id="notif-ico">✓</div>
+  <div>
+    <div class="notif-ttl" id="notif-ttl"></div>
+    <div class="notif-msg" id="notif-msg"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+
+var STORAGE_KEY='fmdm_presets_v4';
+var presets=[];
+try{presets=JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]');}catch(e){}
+var activePreset=null;
+var pushoverOn=true;
+var activeHelp=null;
+
+function $(id){return document.getElementById(id);}
+function val(id){var el=$(id);return el?el.value.trim():'';}
+function he(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function shellEsc(s){
+  if(!s)return'""';
+  if(/[\s"'\\$&|;(){}<>!#]/.test(s))return'"'+s.replace(/\\/g,'\\\\').replace(/"/g,'\\"')+'"';
+  return s;
+}
+
+/* ── DATOS DE AYUDA ─────────────────────────────────────── */
+var HELP = {
+  binary: {
+    flag: 'FMDataMigration',
+    required: true,
+    desc: 'Ruta completa al ejecutable de la herramienta FMDataMigration. Dependiendo del sistema operativo y si está instalado con FileMaker Server o como herramienta independiente, la ubicación varía.',
+    locations: [
+      'macOS (standalone): ruta donde hayas descomprimido el .zip',
+      'macOS (con FM Server): /Library/FileMaker Server/Database Server/bin/FMDataMigration',
+      'Windows (con FM Server): C:\\Program Files\\FileMaker\\FileMaker Server\\Database Server\\FMDataMigration',
+      'Ubuntu (con FM Server): /opt/FileMaker/FileMaker Server/Database Server/bin/FMDataMigration'
+    ],
+    tip: 'Si FM Server está instalado, el comando está disponible en cualquier ubicación de la terminal sin ruta completa.'
+  },
+  src_path: {
+    flag: '-src_path',
+    required: true,
+    desc: 'Ruta completa al archivo FileMaker fuente (.fmp12) que contiene los datos a migrar. Este archivo debe estar cerrado antes de ejecutar la migración.',
+    warn: 'El archivo fuente debe estar cerrado. Si está abierto en FileMaker Pro o alojado en FileMaker Server, la migración fallará.'
+  },
+  clone_path: {
+    flag: '-clone_path',
+    required: true,
+    desc: 'Ruta completa al archivo clon (.fmp12). Un clon es una copia del archivo que contiene todas las tablas, layouts, scripts y definiciones de campos, pero sin datos.',
+    tip: 'Crea el clon desde FileMaker Pro: Archivo > Guardar una copia como… > clon (sin registros). Importante: no abras el clon con FileMaker Pro después de crearlo, ya que eso lo modifica y la herramienta dejará de funcionar.',
+    warn: 'No abras el clon con FileMaker Pro una vez creado. Abrirlo lo modifica y la migración fallará.'
+  },
+  target_path: {
+    flag: '-target_path',
+    required: false,
+    desc: 'Ruta y nombre del archivo destino resultante de la migración. Si no se especifica, la herramienta crea el archivo en la misma carpeta que el archivo fuente con el nombre: nombre_origen_migrated.fmp12.',
+    tip: 'Si ya existe un archivo con ese nombre en la ruta destino, la migración fallará a menos que uses también la opción -force.'
+  },
+  plugin_folder: {
+    flag: '-plugin_folder',
+    required: false,
+    desc: 'Ruta a la carpeta que contiene los plugins necesarios para la migración. Útil cuando los campos calculados del archivo hacen referencia a funciones externas de plugins.',
+    warn: 'La herramienta no carga plugins por defecto. Si tienes cálculos con funciones de plugin, activa también -reevaluate con precaución, ya que los valores calculados pueden cambiar.'
+  },
+  src_account: {
+    flag: '-src_account',
+    required: false,
+    desc: 'Nombre de la cuenta con la que la herramienta accede al archivo fuente. La cuenta debe tener el privilegio extendido fmmigration o el conjunto de privilegios Full Access.',
+    tip: 'El valor por defecto es "Admin". Solo es necesario especificarlo si la cuenta es diferente.'
+  },
+  src_pwd: {
+    flag: '-src_pwd',
+    required: false,
+    desc: 'Contraseña de la cuenta especificada en -src_account para acceder al archivo fuente.',
+    tip: 'Si la cuenta no tiene contraseña, omite este parámetro.'
+  },
+  clone_account: {
+    flag: '-clone_account',
+    required: false,
+    desc: 'Nombre de la cuenta con la que la herramienta accede al archivo clon. Debe tener el privilegio extendido fmmigration o Full Access.',
+    tip: 'El valor por defecto es "Admin". Solo es necesario especificarlo si la cuenta es diferente.'
+  },
+  clone_pwd: {
+    flag: '-clone_pwd',
+    required: false,
+    desc: 'Contraseña de la cuenta especificada en -clone_account para acceder al archivo clon.',
+    tip: 'Si la cuenta no tiene contraseña, omite este parámetro.'
+  },
+  src_key: {
+    flag: '-src_key',
+    required: false,
+    desc: 'Contraseña de cifrado para descifrar el archivo fuente. Solo necesario si el archivo fuente tiene activado el cifrado en reposo (Encryption at Rest) de FileMaker.',
+    warn: 'Este parámetro es distinto de la contraseña de cuenta (-src_pwd). Es la clave de cifrado del archivo, que se configura desde FileMaker Server Admin Console o FileMaker Pro.'
+  },
+  clone_key: {
+    flag: '-clone_key',
+    required: false,
+    desc: 'Contraseña de cifrado para descifrar el archivo clon. Solo necesario si el clon tiene activado el cifrado en reposo.',
+    warn: 'Este parámetro es distinto de la contraseña de cuenta (-clone_pwd). Es la clave de cifrado del archivo.'
+  },
+  ignore_fonts: {
+    flag: '-ignore_fonts',
+    required: false,
+    desc: 'Desactiva la comprobación del mapeo de fuentes en el contenido de los campos. Normalmente la herramienta verifica que las fuentes usadas en el archivo fuente estén disponibles en el sistema donde se ejecuta la migración.',
+    tip: 'Útil cuando el sistema donde se ejecuta la migración no tiene instaladas las mismas fuentes que el sistema donde se creó el archivo fuente. En la mayoría de migraciones entre servidores, es recomendable activar esta opción.'
+  },
+  ignore_accounts: {
+    flag: '-ignore_accounts',
+    required: false,
+    desc: 'Usa las cuentas, contraseñas y la contraseña de cifrado del archivo clon en lugar de migrarlas desde el archivo fuente. Por defecto, la herramienta migra las cuentas y privilegios del origen al archivo destino.',
+    tip: 'Útil cuando el archivo clon tiene cuentas actualizadas para el entorno destino (p.ej. producción) que son diferentes a las del origen (p.ej. desarrollo).'
+  },
+  ignore_valuelists: {
+    flag: '-ignore_valuelists',
+    required: false,
+    desc: 'Usa las listas de valores personalizadas del archivo clon en lugar de migrarlas desde el archivo fuente. Por defecto, las listas de valores personalizadas se migran desde el origen.',
+    tip: 'Activa esta opción si has actualizado las listas de valores en el clon (la nueva versión del archivo) y no quieres que se sobreescriban con los valores del archivo fuente.'
+  },
+  verbose: {
+    flag: '-v',
+    required: false,
+    desc: 'Modo detallado. Proporciona un informe completo sobre el proceso de migración, incluyendo información sobre el esquema, tablas, campos y cuentas.',
+    tip: 'Solo disponible para cuentas con el conjunto de privilegios Full Access. Para cuentas con el privilegio extendido fmmigration (sin Full Access), tanto en modo normal como verbose, la herramienta muestra únicamente un informe breve sin información del esquema.',
+    warn: 'Incompatible con -q. Si se especifican los dos, -q tiene precedencia.'
+  },
+  quiet: {
+    flag: '-q',
+    required: false,
+    desc: 'Modo silencioso. La herramienta no muestra ningún informe en la salida estándar. Útil para ejecutar la migración de forma desatendida en scripts donde solo importa el código de retorno.',
+    tip: 'La herramienta devuelve 0 si la migración es exitosa, y un número distinto de cero si hay error. En modo quiet puedes capturar ese código con $? en bash.',
+    warn: 'Incompatible con -v. Activar -q desactiva -v automáticamente.'
+  },
+  rebuildindexes: {
+    flag: '-rebuildindexes',
+    required: false,
+    desc: 'Reconstruye los índices de los campos durante la migración en lugar de copiarlos directamente desde el archivo fuente. Esto asegura que los índices del archivo destino sean completamente consistentes con los datos migrados.',
+    tip: 'Recomendado cuando el archivo fuente puede tener índices desactualizados o corruptos. El proceso tarda más, pero el resultado es más fiable. En migraciones de producción, generalmente vale la pena activarlo.'
+  },
+  reevaluate: {
+    flag: '-reevaluate',
+    required: false,
+    desc: 'Fuerza la reevaluación de todos los cálculos almacenados durante la migración. Los valores calculados se recomputan en el archivo destino en lugar de copiarse del origen.',
+    warn: 'Los valores calculados originales pueden cambiar si el cálculo incluye funciones Get(), la función Random, o funciones externas de plugins (que la herramienta no carga). Úsalo con precaución en campos de auditoría o con marcas de tiempo.'
+  },
+  force: {
+    flag: '-force',
+    required: false,
+    desc: 'Sobreescribe el archivo destino si ya existe en la ruta especificada (o en la ruta por defecto). Sin esta opción, la herramienta falla si el archivo destino ya existe.',
+    warn: 'El archivo destino existente se eliminará permanentemente antes de crear el nuevo. No hay confirmación ni posibilidad de deshacer. Asegúrate de tener una copia de seguridad si el archivo destino contiene datos importantes.'
+  },
+  target_locale: {
+    flag: '-target_locale',
+    required: false,
+    desc: 'Define el locale del archivo destino resultante. Afecta al orden de clasificación de campos de texto y otros comportamientos dependientes del idioma. Se puede especificar un nombre de locale predefinido (p.ej. "Spanish", "English") o la ruta a un fichero JSON con los elementos de locale.',
+    tip: 'El fichero JSON de locale personalizado debe contener el objeto JSON devuelto por la función Get(FileLocaleElements) en una app con el locale elegido, o por Get(SystemLocaleElements) en un sistema con ese locale. Si no se especifica, se usa el locale del sistema donde se ejecuta la herramienta.'
+  },
+  pushover_user: {
+    flag: 'Pushover User Key',
+    required: false,
+    desc: 'Tu clave de usuario de Pushover. La encontrarás en el dashboard de pushover.net una vez registrado. Identifica tu cuenta y a qué dispositivos se enviarán las notificaciones.',
+    tip: 'Empieza por "u". Puedes encontrarla en https://pushover.net/ después de iniciar sesión.'
+  },
+  pushover_token: {
+    flag: 'Pushover API Token',
+    required: false,
+    desc: 'Token de la aplicación Pushover que envía la notificación. Debes crear una aplicación en https://pushover.net/apps/build para obtenerlo. Cada aplicación tiene su propio token.',
+    tip: 'Empieza por "a". Crea una app específica para FMDataMigration en pushover.net/apps/build para tenerlo organizado.'
+  }
+};
+
+/* ── PANEL AYUDA ─────────────────────────────────────────── */
+function showHelp(key) {
+  var h = HELP[key];
+  if (!h) return;
+
+  // Si mismo botón, cerrar
+  if (activeHelp === key) { closeHelp(); return; }
+  activeHelp = key;
+
+  // Marcar botón activo
+  document.querySelectorAll('.help-btn').forEach(function(b){ b.classList.remove('active'); });
+  document.querySelectorAll('[data-help="'+key+'"]').forEach(function(b){ b.classList.add('active'); });
+
+  $('hp-flag').textContent = h.flag;
+
+  var body = '';
+
+  // Badge requerido/opcional
+  body += '<div>';
+  body += h.required
+    ? '<span style="display:inline-block;font-size:11px;background:rgba(224,80,80,.15);color:var(--danger);border:1px solid rgba(224,80,80,.3);border-radius:4px;padding:2px 8px;">Obligatorio</span>'
+    : '<span style="display:inline-block;font-size:11px;background:rgba(136,136,136,.1);color:var(--text3);border:1px solid var(--border);border-radius:4px;padding:2px 8px;">Opcional</span>';
+  body += '</div>';
+
+  // Descripción
+  body += '<div><div class="hp-section-title">Descripción</div><p class="hp-desc">'+he(h.desc)+'</p></div>';
+
+  // Ubicaciones (binario)
+  if (h.locations) {
+    body += '<div><div class="hp-section-title">Ubicaciones por defecto</div><div style="display:flex;flex-direction:column;gap:4px;">';
+    h.locations.forEach(function(l){
+      body += '<code style="font-family:var(--font);font-size:10px;background:var(--surface2);border:1px solid var(--border2);border-radius:4px;padding:4px 7px;color:#90c8ff;line-height:1.6;display:block;word-break:break-all;">'+he(l)+'</code>';
+    });
+    body += '</div></div>';
+  }
+
+  // Tip
+  if (h.tip) {
+    body += '<div class="hp-tip">💡 '+he(h.tip)+'</div>';
+  }
+
+  // Warn
+  if (h.warn) {
+    body += '<div class="hp-warn">⚠️ '+he(h.warn)+'</div>';
+  }
+
+  // Enlace documentación
+  body += '<div><a class="hp-link" href="https://help.claris.com/en/data-migration-tool-guide/content/migrate-data.html" target="_blank">📖 Documentación oficial Claris ↗</a></div>';
+
+  $('hp-body').innerHTML = body;
+  $('layout').classList.add('help-open');
+}
+
+function closeHelp() {
+  activeHelp = null;
+  $('layout').classList.remove('help-open');
+  document.querySelectorAll('.help-btn').forEach(function(b){ b.classList.remove('active'); });
+}
+
+$('hp-close').addEventListener('click', closeHelp);
+
+// Delegar clicks de help-btn
+document.addEventListener('click', function(e) {
+  var btn = e.target.closest('.help-btn');
+  if (btn) {
+    e.stopPropagation();
+    var key = btn.dataset.help;
+    if (key) showHelp(key);
+  }
+});
+
+/* ── FLAGS ───────────────────────────────────────────────── */
+function getFlags(){
+  var r={};
+  document.querySelectorAll('.opt').forEach(function(el){ r[el.dataset.flag]=el.classList.contains('on'); });
+  return r;
+}
+function setFlag(flag,value){
+  document.querySelectorAll('.opt').forEach(function(el){
+    if(el.dataset.flag!==flag) return;
+    el.classList.toggle('on',value);
+    var b=el.querySelector('.opt-box'); if(b) b.textContent=value?'✓':'';
+  });
+}
+document.querySelectorAll('.opt').forEach(function(el){
+  el.addEventListener('click',function(e){
+    if(e.target.closest('.help-btn')) return; // no toggle si es el botón de ayuda
+    var on=el.classList.contains('on');
+    if(el.dataset.flag==='verbose'&&!on) setFlag('quiet',false);
+    if(el.dataset.flag==='quiet'&&!on) setFlag('verbose',false);
+    el.classList.toggle('on',!on);
+    var b=el.querySelector('.opt-box'); if(b) b.textContent=!on?'✓':'';
+    updateCommand();
+  });
+});
+
+/* ── LOCALE ──────────────────────────────────────────────── */
+$('target_locale_select').addEventListener('change',function(){
+  $('locale-file-field').style.display=(this.value==='__file__')?'':'none';
+  updateCommand();
+});
+$('target_locale_file').addEventListener('input',updateCommand);
+
+/* ── PUSHOVER ────────────────────────────────────────────── */
+$('toggle-pushover').addEventListener('click',function(){
+  pushoverOn=!pushoverOn;
+  $('tog-push').classList.toggle('on',pushoverOn);
+  $('pushover-fields').style.display=pushoverOn?'':'none';
+});
+
+/* ── COMANDO ─────────────────────────────────────────────── */
+function buildCommand(){
+  var f=getFlags();
+  var p=[];
+  var bin=val('binary_path')||'/path/to/FMDataMigration';
+  p.push(shellEsc(bin));
+  var src=val('src_path'); if(src) p.push('-src_path '+shellEsc(src));
+  var sa=val('src_account'); if(sa) p.push('-src_account '+shellEsc(sa));
+  var sp=val('src_pwd'); if(sp) p.push('-src_pwd '+shellEsc(sp));
+  var sk=val('src_key'); if(sk) p.push('-src_key '+shellEsc(sk));
+  var cl=val('clone_path'); if(cl) p.push('-clone_path '+shellEsc(cl));
+  var ca=val('clone_account'); if(ca) p.push('-clone_account '+shellEsc(ca));
+  var cp=val('clone_pwd'); if(cp) p.push('-clone_pwd '+shellEsc(cp));
+  var ck=val('clone_key'); if(ck) p.push('-clone_key '+shellEsc(ck));
+  var tp=val('target_path'); if(tp) p.push('-target_path '+shellEsc(tp));
+  var pf=val('plugin_folder'); if(pf) p.push('-plugin_folder '+shellEsc(pf));
+  if(f.ignore_fonts) p.push('-ignore_fonts');
+  if(f.ignore_accounts) p.push('-ignore_accounts');
+  if(f.ignore_valuelists) p.push('-ignore_valuelists');
+  if(f.force) p.push('-force');
+  if(f.verbose&&!f.quiet) p.push('-v');
+  if(f.quiet) p.push('-q');
+  if(f.rebuildindexes) p.push('-rebuildindexes');
+  if(f.reevaluate) p.push('-reevaluate');
+  var locSel=val('target_locale_select');
+  if(locSel&&locSel!=='__file__') p.push('-target_locale '+shellEsc(locSel));
+  else if(locSel==='__file__'){ var lf=val('target_locale_file'); if(lf) p.push('-target_locale '+shellEsc(lf)); }
+  return p.join(' \\\n  ');
+}
+
+function updateCommand(){
+  var cmd=buildCommand();
+  var lines=cmd.split('\n');
+  var html=lines.map(function(line,i){
+    if(i===0) return '<span class="cg">'+he(line)+'</span>';
+    return he(line).replace(/(-\w+)/g,'<span class="cy">$1</span>');
+  }).join('\n');
+  $('cmd-box').innerHTML=html;
+}
+
+var inputIds=['binary_path','src_path','src_account','src_pwd','src_key','clone_path','clone_account','clone_pwd','clone_key','target_path','plugin_folder','pushover_user','pushover_token','pushover_msg'];
+inputIds.forEach(function(id){ var el=$(id); if(el) el.addEventListener('input',updateCommand); });
+
+/* ── PRESETS ─────────────────────────────────────────────── */
+function renderPresets(){
+  var list=$('presets-list');
+  list.innerHTML='';
+  if(!presets.length){ list.innerHTML='<div style="padding:7px 13px;font-size:11px;color:var(--text3)">Sin configuraciones</div>'; return; }
+  presets.forEach(function(p,i){
+    var div=document.createElement('div');
+    div.className='preset'+(activePreset===i?' active':'');
+    div.innerHTML='<span class="preset-name">'+he(p.name)+'</span><button class="preset-del">✕</button>';
+    div.querySelector('.preset-name').addEventListener('click',function(){ loadPreset(i); });
+    div.querySelector('.preset-del').addEventListener('click',function(e){ e.stopPropagation(); deletePreset(i); });
+    list.appendChild(div);
+  });
+}
+
+function getFormData(){
+  return {
+    binary_path:val('binary_path'),
+    src_path:val('src_path'),src_account:val('src_account'),src_pwd:val('src_pwd'),src_key:val('src_key'),
+    clone_path:val('clone_path'),clone_account:val('clone_account'),clone_pwd:val('clone_pwd'),clone_key:val('clone_key'),
+    target_path:val('target_path'),plugin_folder:val('plugin_folder'),
+    flags:getFlags(),
+    target_locale_select:val('target_locale_select'),target_locale_file:val('target_locale_file'),
+    pushover_enabled:pushoverOn,pushover_user:val('pushover_user'),pushover_token:val('pushover_token'),pushover_msg:val('pushover_msg')
+  };
+}
+
+function applyFormData(d){
+  if(!d) return;
+  function set(id,v){ var el=$(id); if(el&&v!==undefined) el.value=v||''; }
+  set('binary_path',d.binary_path);
+  set('src_path',d.src_path);set('src_account',d.src_account);set('src_pwd',d.src_pwd);set('src_key',d.src_key);
+  set('clone_path',d.clone_path);set('clone_account',d.clone_account);set('clone_pwd',d.clone_pwd);set('clone_key',d.clone_key);
+  set('target_path',d.target_path);set('plugin_folder',d.plugin_folder);
+  set('pushover_user',d.pushover_user);set('pushover_token',d.pushover_token);set('pushover_msg',d.pushover_msg);
+  if(d.flags) Object.keys(d.flags).forEach(function(k){ setFlag(k,d.flags[k]); });
+  if(d.target_locale_select!==undefined){
+    $('target_locale_select').value=d.target_locale_select||'';
+    $('locale-file-field').style.display=(d.target_locale_select==='__file__')?'':'none';
+    set('target_locale_file',d.target_locale_file);
+  }
+  if(d.pushover_enabled!==undefined&&d.pushover_enabled!==pushoverOn){
+    pushoverOn=d.pushover_enabled;
+    $('tog-push').classList.toggle('on',pushoverOn);
+    $('pushover-fields').style.display=pushoverOn?'':'none';
+  }
+}
+
+function loadPreset(i){
+  activePreset=i; applyFormData(presets[i].data);
+  $('preset-name').value=presets[i].name;
+  renderPresets(); updateCommand();
+  notify('ok','Configuración cargada',presets[i].name);
+}
+function savePreset(){
+  var name=val('preset-name');
+  if(!name){ notify('err','Falta nombre','Escribe un nombre para guardar'); return; }
+  var data=getFormData();
+  var idx=presets.findIndex(function(p){ return p.name===name; });
+  if(idx>=0){ presets[idx].data=data; activePreset=idx; notify('ok','Actualizado',name); }
+  else { presets.push({name:name,data:data}); activePreset=presets.length-1; notify('ok','Guardado',name); }
+  localStorage.setItem(STORAGE_KEY,JSON.stringify(presets));
+  renderPresets();
+}
+function deletePreset(i){
+  if(!confirm('¿Eliminar "'+presets[i].name+'"?')) return;
+  presets.splice(i,1);
+  if(activePreset===i) activePreset=null;
+  else if(activePreset>i) activePreset--;
+  localStorage.setItem(STORAGE_KEY,JSON.stringify(presets));
+  renderPresets();
+}
+
+/* ── SCRIPT ──────────────────────────────────────────────── */
+function generateScript(){
+  var d=getFormData(); var cmd=buildCommand();
+  var push=''; var okCall='  echo "✓ Completado en $ELAPSED segundos"\n'; var failCall='  echo "✗ Error"\n';
+  if(d.pushover_enabled&&d.pushover_user&&d.pushover_token){
+    var msg=d.pushover_msg||'Migración FileMaker completada';
+    push='\nPUSHOVER_USER="'+d.pushover_user+'"\nPUSHOVER_TOKEN="'+d.pushover_token+'"\n\nsend_push() {\n  curl -s \\\n    --form-string "token=$PUSHOVER_TOKEN" \\\n    --form-string "user=$PUSHOVER_USER" \\\n    --form-string "message=$1" \\\n    --form-string "title=FMDataMigration" \\\n    --form-string "priority=$2" \\\n    https://api.pushover.net/1/messages.json > /dev/null\n}\n';
+    okCall='  echo "✓ Completado en $ELAPSED segundos"\n  send_push "'+msg+' ($ELAPSED s)" 0\n  echo "✓ Push enviado"\n';
+    failCall='  echo "✗ Error en la migración"\n  send_push "Migración FileMaker FALLIDA" 1\n';
+  }
+  var script='#!/bin/bash\n# FMDataMigration — generado '+(new Date().toLocaleString('es-ES'))+'\nset -euo pipefail\n'+push+'\necho "▶ Iniciando migración FileMaker..."\necho "  Fuente : '+(d.src_path||'')+'"\necho "  Clon   : '+(d.clone_path||'')+'"\necho ""\n\nSTART=$(date +%s)\n\nif '+cmd+'\nthen\n  END=$(date +%s)\n  ELAPSED=$((END - START))\n'+okCall+'else\n'+failCall+'  exit 1\nfi\n';
+  download(script,'fm_migrate.sh','text/plain');
+  notify('ok','Script descargado','chmod +x fm_migrate.sh && ./fm_migrate.sh');
+}
+
+function download(content,filename,type){
+  var blob=new Blob([content],{type:type});
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement('a');
+  a.href=url; a.download=filename;
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a); URL.revokeObjectURL(url);
+}
+
+function copyText(text){
+  if(navigator.clipboard){
+    navigator.clipboard.writeText(text).then(function(){ notify('ok','Copiado','Pégalo en Terminal'); }).catch(function(){ fbCopy(text); });
+  } else { fbCopy(text); }
+}
+function fbCopy(text){
+  var ta=document.createElement('textarea');
+  ta.value=text; ta.style.cssText='position:fixed;opacity:0;';
+  document.body.appendChild(ta); ta.select();
+  try{ document.execCommand('copy'); notify('ok','Copiado','Pégalo en Terminal'); }
+  catch(e){ notify('err','No se pudo copiar','Selecciona el texto manualmente'); }
+  document.body.removeChild(ta);
+}
+
+/* ── EVENTOS ─────────────────────────────────────────────── */
+$('btn-run').addEventListener('click',function(){
+  var d=getFormData();
+  if(!d.binary_path){ notify('err','Falta ejecutable','Especifica la ruta de FMDataMigration'); return; }
+  if(!d.src_path){ notify('err','Falta -src_path','-src_path es obligatorio'); return; }
+  if(!d.clone_path){ notify('err','Falta -clone_path','-clone_path es obligatorio'); return; }
+  generateScript();
+  setStatus('run','Script generado — ejecuta fm_migrate.sh en Terminal');
+  setTimeout(function(){ setStatus('','Listo'); },5000);
+});
+$('btn-copy').addEventListener('click',function(){ copyText(buildCommand().replace(/\\\n  /g,' ')); });
+$('btn-sh').addEventListener('click',generateScript);
+$('btn-version').addEventListener('click',function(){
+  var bin=val('binary_path')||'FMDataMigration';
+  copyText(shellEsc(bin)+' -version');
+  notify('ok','Copiado','-version → ignora el resto de parámetros y muestra la versión');
+});
+$('btn-save').addEventListener('click',savePreset);
+$('btn-new-preset').addEventListener('click',function(){ activePreset=null; $('preset-name').value=''; renderPresets(); });
+$('btn-export').addEventListener('click',function(){
+  var name=val('preset-name')||'config';
+  download(JSON.stringify({name:name,data:getFormData()},null,2),'fmdm_'+name.replace(/\s+/g,'_')+'.json','application/json');
+  notify('ok','Exportado','fmdm_'+name+'.json');
+});
+$('btn-import').addEventListener('click',function(){
+  var inp=document.createElement('input');
+  inp.type='file'; inp.accept='.json';
+  inp.addEventListener('change',function(){
+    var f=inp.files[0]; if(!f) return;
+    var r=new FileReader();
+    r.onload=function(e){
+      try{
+        var obj=JSON.parse(e.target.result);
+        var data=obj.data||obj; var name=obj.name||'Importada';
+        presets.push({name:name,data:data});
+        activePreset=presets.length-1;
+        localStorage.setItem(STORAGE_KEY,JSON.stringify(presets));
+        renderPresets(); loadPreset(activePreset);
+      } catch(err){ notify('err','Error al importar','JSON no válido'); }
+    };
+    r.readAsText(f);
+  });
+  inp.click();
+});
+
+/* ── STATUS / NOTIF ──────────────────────────────────────── */
+function setStatus(type,text){ $('status-dot').className='dot'+(type?' '+type:''); $('status-txt').textContent=text; }
+var notifT;
+function notify(type,title,msg){
+  var el=$('notif');
+  $('notif-ico').textContent=type==='err'?'✗':'✓';
+  $('notif-ttl').textContent=title;
+  $('notif-msg').textContent=msg||'';
+  el.className='notif show '+(type==='err'?'err':'ok');
+  clearTimeout(notifT);
+  notifT=setTimeout(function(){ el.classList.remove('show'); },3500);
+}
+
+/* ── INIT ────────────────────────────────────────────────── */
+renderPresets();
+updateCommand();
+
+})();
+</script>
+</body>
+</html>
