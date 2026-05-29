@@ -1,5 +1,9 @@
 # FMDataMigration Assistant
 
+[English](README.en.md) | [Français](README.fr.md) | **Español**
+
+---
+
 Interfaz gráfica para la herramienta de línea de comandos **Claris FileMaker Data Migration Tool** (`FMDataMigration`).
 
 App de escritorio multiplataforma (macOS, Windows) construida con Electron. Sin servidores, sin dependencias externas en tiempo de ejecución. Ejecuta la migración directamente desde la interfaz y muestra el output en tiempo real.
@@ -12,6 +16,7 @@ App de escritorio multiplataforma (macOS, Windows) construida con Electron. Sin 
 - **Selectores de archivo nativos** del sistema operativo para todas las rutas
 - **Todos los parámetros oficiales** de FMDataMigration soportados
 - **Ayuda contextual** para cada parámetro con el botón `?`
+- **Multi-idioma** — Español, English, Français
 - **Notificación push** al móvil vía [Pushover](https://pushover.net) al terminar (éxito o fallo)
 - **Configuraciones guardadas** con nombre, exportables/importables como JSON
 - **Generación de script `.sh`** para ejecución en Terminal si se prefiere
@@ -26,7 +31,8 @@ Ve a la sección [Releases](../../releases) para descargar el instalador de tu p
 
 | Plataforma | Archivo |
 |---|---|
-| macOS (Apple Silicon + Intel) | `FMDataMigration.Assistant-x.x.x.dmg` |
+| macOS Apple Silicon | `FMDataMigration.Assistant-x.x.x-arm64.dmg` |
+| macOS Intel | `FMDataMigration.Assistant-x.x.x.dmg` |
 | Windows 64-bit | `FMDataMigration.Assistant.Setup.x.x.x.exe` |
 
 ---
@@ -50,7 +56,7 @@ npm start
 ### Compilar instaladores
 
 ```bash
-# macOS (.dmg universal)
+# macOS (.dmg)
 npm run dist:mac
 
 # Windows (.exe NSIS)
@@ -61,8 +67,6 @@ npm run dist:all
 ```
 
 Los instaladores se generan en la carpeta `dist/`.
-
-> **Nota:** Para compilar el instalador de macOS necesitas ejecutarlo en macOS. Para Windows en Windows (o en un CI con Windows runner).
 
 ---
 
@@ -100,6 +104,21 @@ Para recibir una notificación push al móvil al terminar la migración:
 2. Crea una app en [pushover.net/apps/build](https://pushover.net/apps/build) — copia el **API Token**
 3. Copia tu **User Key** del dashboard
 4. Introdúcelos en la sección *Notificación Pushover* de la app
+
+---
+
+## Apoyar el proyecto
+
+Si este software te resulta útil, puedes apoyar su desarrollo:
+
+[![Buy Me a Coffee](https://img.shields.io/badge/Buy%20Me%20a%20Coffee-☕-orange?style=flat-square)](https://buymeacoffee.com/angelbonet)
+
+---
+
+## Autor
+
+**Angel Bonet**  
+[abdatabase.com](https://abdatabase.com) · [abdatabase@abdatabase.com](mailto:abdatabase@abdatabase.com)
 
 ---
 
