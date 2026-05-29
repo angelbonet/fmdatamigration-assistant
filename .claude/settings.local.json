@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(brew list *)",
+      "Bash(convert -size 1024x1024 xc:'#1a1a2e' -fill '#16213e' -draw \"roundrectangle 100,100 924,924 120,120\" -fill '#0f3460' -draw \"roundrectangle 150,150 874,874 100,100\" -fill '#e94560' -font Helvetica-Bold -pointsize 400 -gravity center -draw \"text 0,0 'FM'\" icon_1024.png)",
+      "Bash(magick -size 1024x1024 'xc:#1a1a2e' -fill '#0f3460' -draw 'roundrectangle 80,80 944,944 140,140' -fill '#e94560' -draw 'polygon 350,250 674,512 350,774' -fill '#ffffff' -draw 'rectangle 560,350 680,674' icon_1024.png)",
+      "Bash(magick icon_1024.png -define icon:auto-resize=256,128,64,48,32,16 icon.ico)",
+      "Bash(npm start *)",
+      "Bash(npm install *)",
+      "Bash(./node_modules/.bin/electron --version)",
+      "Bash(cd *)",
+      "Bash(mkdir -p ~/Projects)",
+      "Bash(cp -R \"/Volumes/abdatabase/Informatica/Documentos ST/AI/fmdatamigration-assistant\" ~/Projects/)",
+      "Read(//Users/abonetibook/Projects/**)",
+      "Bash(cp -R \"/Volumes/abdatabase/Informatica/Documentos ST/AI/fmdatamigration-assistant\" /Users/abonetibook/Documents/Desarrollo/)",
+      "Read(//Users/abonetibook/Documents/Desarrollo/**)"
+    ]
+  }
+}
