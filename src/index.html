@@ -26,7 +26,7 @@ body.win .titlebar{padding-left:16px;}
 
 /* APP LAYOUT */
 .app{display:flex;flex-direction:column;height:100vh;}
-.body{display:grid;grid-template-columns:200px 1fr 0px;flex:1;overflow:hidden;transition:grid-template-columns .25s ease;}
+.body{display:grid;grid-template-columns:200px 1fr 0px;flex:1;min-height:0;transition:grid-template-columns .25s ease;}
 .body.help-open{grid-template-columns:200px 1fr 300px;}
 .body.log-open{grid-template-columns:200px 1fr 340px;}
 
@@ -43,12 +43,18 @@ body.win .titlebar{padding-left:16px;}
 .sb-bottom{padding:10px 13px;border-top:1px solid var(--border);}
 .btn-new{width:100%;padding:7px 10px;background:var(--surface2);border:1px solid var(--border2);color:var(--text2);border-radius:6px;font-size:12px;cursor:pointer;font-family:var(--sans);display:flex;align-items:center;gap:5px;justify-content:center;}
 .btn-new:hover{border-color:var(--accent);color:var(--accent);}
+.coffee-link{display:flex;align-items:center;gap:6px;padding:10px 13px;color:#e8a020;font-size:12px;text-decoration:none;cursor:pointer;transition:all .15s;border-top:1px solid var(--border);}
+.coffee-link:hover{background:rgba(232,160,32,.08);color:#ffb940;}
+
+/* LANG SELECTOR */
+.lang-select{background:var(--surface2);border:1px solid var(--border2);color:var(--text2);padding:3px 6px;border-radius:4px;font-size:10px;cursor:pointer;outline:none;}
+.lang-select:hover{border-color:var(--accent);}
 
 /* MAIN SCROLL */
-.main{overflow-y:auto;padding:16px 20px;display:flex;flex-direction:column;gap:12px;}
+.main{overflow-y:auto;padding:16px 20px;display:flex;flex-direction:column;gap:12px;min-height:0;}
 
 /* CARDS */
-.card{background:var(--surface);border:1px solid var(--border);border-radius:9px;overflow:hidden;}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:9px;overflow:hidden;flex-shrink:0;}
 .card-head{padding:9px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:7px;}
 .card-title{font-size:10px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--text2);flex:1;}
 .card-body{padding:12px 14px;}
@@ -152,7 +158,7 @@ input::placeholder{color:var(--text3);}
 .dot.err{background:var(--danger);}
 .dot.run{background:var(--accent);animation:blink 1s infinite;}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
-.save-bar{display:flex;gap:7px;align-items:center;padding:8px 14px;border-top:1px solid var(--border);flex-wrap:wrap;}
+.save-bar{display:flex;gap:7px;align-items:center;padding:8px 14px;border-top:1px solid var(--border);flex-wrap:wrap;flex-shrink:0;}
 .save-bar input{max-width:160px;font-family:var(--sans);}
 
 /* CMD */
@@ -184,21 +190,27 @@ input::placeholder{color:var(--text3);}
   <div class="titlebar">
     <span class="titlebar-title">FMDataMigration Assistant</span>
     <div class="titlebar-right">
-      <button class="btn btn-ghost" id="btn-version">Ver versión</button>
+      <select class="lang-select" id="lang-select">
+        <option value="es">ES</option>
+        <option value="en">EN</option>
+        <option value="fr">FR</option>
+      </select>
+      <button class="btn btn-ghost" id="btn-version" data-i18n="version">Ver versión</button>
       <button class="btn btn-ghost" id="btn-log-toggle">📋 Log</button>
-      <button class="btn btn-run" id="btn-run">▶ Ejecutar</button>
-      <button class="btn btn-cancel" id="btn-cancel">■ Cancelar</button>
+      <button class="btn btn-run" id="btn-run" data-i18n="run">▶ Ejecutar</button>
+      <button class="btn btn-cancel" id="btn-cancel" data-i18n="cancel">■ Cancelar</button>
     </div>
   </div>
 
   <div class="body" id="body">
     <!-- SIDEBAR -->
     <div class="sidebar">
-      <div class="sb-lbl">Configuraciones</div>
+      <div class="sb-lbl" data-i18n="configs">Configuraciones</div>
       <div class="sb-list" id="presets-list"></div>
       <div class="sb-bottom">
-        <button class="btn-new" id="btn-new-preset">＋ Nueva configuración</button>
+        <button class="btn-new" id="btn-new-preset" data-i18n="newConfig">＋ Nueva configuración</button>
       </div>
+      <a class="coffee-link" id="coffee-link">☕ <span data-i18n="coffee">Buy Dev a Coffee</span></a>
     </div>
 
     <!-- MAIN -->
@@ -206,16 +218,16 @@ input::placeholder{color:var(--text3);}
 
       <!-- EJECUTABLE -->
       <div class="card">
-        <div class="card-head"><span>⚙</span><span class="card-title">Ejecutable FMDataMigration</span></div>
+        <div class="card-head"><span>⚙</span><span class="card-title" data-i18n="execTitle">Ejecutable FMDataMigration</span></div>
         <div class="card-body g1">
           <div class="field">
             <div class="field-lbl">
-              <label>Ruta del ejecutable</label>
+              <label data-i18n="execLabel">Ruta del ejecutable</label>
               <button class="help-btn" data-help="binary">?</button>
             </div>
             <div class="frow">
               <input type="text" id="binary_path" placeholder="/ruta/a/FMDataMigration">
-              <button class="btn-browse" id="browse-binary">Examinar…</button>
+              <button class="btn-browse" id="browse-binary" data-i18n="browse">Examinar…</button>
             </div>
           </div>
         </div>
@@ -223,11 +235,11 @@ input::placeholder{color:var(--text3);}
 
       <!-- ARCHIVOS -->
       <div class="card">
-        <div class="card-head"><span>📁</span><span class="card-title">Archivos</span></div>
+        <div class="card-head"><span>📁</span><span class="card-title" data-i18n="filesTitle">Archivos</span></div>
         <div class="card-body g2">
           <div class="field">
             <div class="field-lbl">
-              <label>Fuente <span class="req">*</span></label>
+              <label><span data-i18n="source">Fuente</span> <span class="req">*</span></label>
               <code>-src_path</code>
               <button class="help-btn" data-help="src_path">?</button>
             </div>
@@ -238,7 +250,7 @@ input::placeholder{color:var(--text3);}
           </div>
           <div class="field">
             <div class="field-lbl">
-              <label>Clon <span class="req">*</span></label>
+              <label><span data-i18n="clone">Clon</span> <span class="req">*</span></label>
               <code>-clone_path</code>
               <button class="help-btn" data-help="clone_path">?</button>
             </div>
@@ -249,7 +261,7 @@ input::placeholder{color:var(--text3);}
           </div>
           <div class="field">
             <div class="field-lbl">
-              <label>Destino</label>
+              <label data-i18n="target">Destino</label>
               <code>-target_path</code>
               <button class="help-btn" data-help="target_path">?</button>
             </div>
@@ -260,7 +272,7 @@ input::placeholder{color:var(--text3);}
           </div>
           <div class="field">
             <div class="field-lbl">
-              <label>Carpeta plugins</label>
+              <label data-i18n="pluginFolder">Carpeta plugins</label>
               <code>-plugin_folder</code>
               <button class="help-btn" data-help="plugin_folder">?</button>
             </div>
@@ -274,22 +286,22 @@ input::placeholder{color:var(--text3);}
 
       <!-- CREDENCIALES -->
       <div class="card">
-        <div class="card-head"><span>🔑</span><span class="card-title">Credenciales</span></div>
+        <div class="card-head"><span>🔑</span><span class="card-title" data-i18n="credsTitle">Credenciales</span></div>
         <div class="card-body g2">
           <div class="field">
-            <div class="field-lbl"><label>Cuenta fuente</label><code>-src_account</code><button class="help-btn" data-help="src_account">?</button></div>
+            <div class="field-lbl"><label data-i18n="srcAccount">Cuenta fuente</label><code>-src_account</code><button class="help-btn" data-help="src_account">?</button></div>
             <input type="text" id="src_account" placeholder="admin (por defecto)">
           </div>
           <div class="field">
-            <div class="field-lbl"><label>Password fuente</label><code>-src_pwd</code><button class="help-btn" data-help="src_pwd">?</button></div>
+            <div class="field-lbl"><label data-i18n="srcPwd">Password fuente</label><code>-src_pwd</code><button class="help-btn" data-help="src_pwd">?</button></div>
             <input type="password" id="src_pwd" placeholder="12345">
           </div>
           <div class="field">
-            <div class="field-lbl"><label>Cuenta clon</label><code>-clone_account</code><button class="help-btn" data-help="clone_account">?</button></div>
+            <div class="field-lbl"><label data-i18n="cloneAccount">Cuenta clon</label><code>-clone_account</code><button class="help-btn" data-help="clone_account">?</button></div>
             <input type="text" id="clone_account" placeholder="admin (por defecto)">
           </div>
           <div class="field">
-            <div class="field-lbl"><label>Password clon</label><code>-clone_pwd</code><button class="help-btn" data-help="clone_pwd">?</button></div>
+            <div class="field-lbl"><label data-i18n="clonePwd">Password clon</label><code>-clone_pwd</code><button class="help-btn" data-help="clone_pwd">?</button></div>
             <input type="password" id="clone_pwd" placeholder="12345">
           </div>
         </div>
@@ -297,14 +309,14 @@ input::placeholder{color:var(--text3);}
 
       <!-- CIFRADO -->
       <div class="card">
-        <div class="card-head"><span>🔒</span><span class="card-title">Cifrado (Encryption at Rest)</span></div>
+        <div class="card-head"><span>🔒</span><span class="card-title" data-i18n="encTitle">Cifrado (Encryption at Rest)</span></div>
         <div class="card-body g2">
           <div class="field">
-            <div class="field-lbl"><label>Clave fuente</label><code>-src_key</code><button class="help-btn" data-help="src_key">?</button></div>
+            <div class="field-lbl"><label data-i18n="srcKey">Clave fuente</label><code>-src_key</code><button class="help-btn" data-help="src_key">?</button></div>
             <input type="password" id="src_key" placeholder="Solo si el archivo fuente está cifrado">
           </div>
           <div class="field">
-            <div class="field-lbl"><label>Clave clon</label><code>-clone_key</code><button class="help-btn" data-help="clone_key">?</button></div>
+            <div class="field-lbl"><label data-i18n="cloneKey">Clave clon</label><code>-clone_key</code><button class="help-btn" data-help="clone_key">?</button></div>
             <input type="password" id="clone_key" placeholder="Solo si el clon está cifrado">
           </div>
         </div>
@@ -312,28 +324,28 @@ input::placeholder{color:var(--text3);}
 
       <!-- OPCIONES -->
       <div class="card">
-        <div class="card-head"><span>⚡</span><span class="card-title">Opciones</span></div>
+        <div class="card-head"><span>⚡</span><span class="card-title" data-i18n="optsTitle">Opciones</span></div>
         <div class="card-body">
           <div class="opts-grid">
-            <div class="opt on" data-flag="ignore_fonts"><div class="opt-box">✓</div><div class="opt-content"><div class="opt-top"><span class="opt-flag">-ignore_fonts</span><button class="help-btn" data-help="ignore_fonts">?</button></div><span class="opt-desc">No comprobar mapeo de fuentes</span></div></div>
-            <div class="opt on" data-flag="ignore_accounts"><div class="opt-box">✓</div><div class="opt-content"><div class="opt-top"><span class="opt-flag">-ignore_accounts</span><button class="help-btn" data-help="ignore_accounts">?</button></div><span class="opt-desc">Usar cuentas del clon</span></div></div>
-            <div class="opt" data-flag="ignore_valuelists"><div class="opt-box"></div><div class="opt-content"><div class="opt-top"><span class="opt-flag">-ignore_valuelists</span><button class="help-btn" data-help="ignore_valuelists">?</button></div><span class="opt-desc">Usar listas de valores del clon</span></div></div>
-            <div class="opt on" data-flag="verbose"><div class="opt-box">✓</div><div class="opt-content"><div class="opt-top"><span class="opt-flag">-v &nbsp;verbose</span><button class="help-btn" data-help="verbose">?</button></div><span class="opt-desc">Informe detallado del proceso</span></div></div>
-            <div class="opt" data-flag="quiet"><div class="opt-box"></div><div class="opt-content"><div class="opt-top"><span class="opt-flag">-q &nbsp;quiet</span><button class="help-btn" data-help="quiet">?</button></div><span class="opt-desc">Sin informe. Incompatible con -v</span></div></div>
-            <div class="opt on" data-flag="rebuildindexes"><div class="opt-box">✓</div><div class="opt-content"><div class="opt-top"><span class="opt-flag">-rebuildindexes</span><button class="help-btn" data-help="rebuildindexes">?</button></div><span class="opt-desc">Reconstruir índices</span></div></div>
-            <div class="opt" data-flag="reevaluate"><div class="opt-box"></div><div class="opt-content"><div class="opt-top"><span class="opt-flag">-reevaluate</span><button class="help-btn" data-help="reevaluate">?</button></div><span class="opt-desc">Reevaluar cálculos almacenados</span></div></div>
-            <div class="opt" data-flag="force"><div class="opt-box"></div><div class="opt-content"><div class="opt-top"><span class="opt-flag">-force</span><button class="help-btn" data-help="force">?</button></div><span class="opt-desc">Sobreescribir archivo destino</span></div></div>
+            <div class="opt on" data-flag="ignore_fonts"><div class="opt-box">✓</div><div class="opt-content"><div class="opt-top"><span class="opt-flag">-ignore_fonts</span><button class="help-btn" data-help="ignore_fonts">?</button></div><span class="opt-desc" data-i18n="optIgnoreFonts">No comprobar mapeo de fuentes</span></div></div>
+            <div class="opt on" data-flag="ignore_accounts"><div class="opt-box">✓</div><div class="opt-content"><div class="opt-top"><span class="opt-flag">-ignore_accounts</span><button class="help-btn" data-help="ignore_accounts">?</button></div><span class="opt-desc" data-i18n="optIgnoreAccounts">Usar cuentas del clon</span></div></div>
+            <div class="opt" data-flag="ignore_valuelists"><div class="opt-box"></div><div class="opt-content"><div class="opt-top"><span class="opt-flag">-ignore_valuelists</span><button class="help-btn" data-help="ignore_valuelists">?</button></div><span class="opt-desc" data-i18n="optIgnoreValuelists">Usar listas de valores del clon</span></div></div>
+            <div class="opt on" data-flag="verbose"><div class="opt-box">✓</div><div class="opt-content"><div class="opt-top"><span class="opt-flag">-v &nbsp;verbose</span><button class="help-btn" data-help="verbose">?</button></div><span class="opt-desc" data-i18n="optVerbose">Informe detallado del proceso</span></div></div>
+            <div class="opt" data-flag="quiet"><div class="opt-box"></div><div class="opt-content"><div class="opt-top"><span class="opt-flag">-q &nbsp;quiet</span><button class="help-btn" data-help="quiet">?</button></div><span class="opt-desc" data-i18n="optQuiet">Sin informe. Incompatible con -v</span></div></div>
+            <div class="opt on" data-flag="rebuildindexes"><div class="opt-box">✓</div><div class="opt-content"><div class="opt-top"><span class="opt-flag">-rebuildindexes</span><button class="help-btn" data-help="rebuildindexes">?</button></div><span class="opt-desc" data-i18n="optRebuild">Reconstruir índices</span></div></div>
+            <div class="opt" data-flag="reevaluate"><div class="opt-box"></div><div class="opt-content"><div class="opt-top"><span class="opt-flag">-reevaluate</span><button class="help-btn" data-help="reevaluate">?</button></div><span class="opt-desc" data-i18n="optReevaluate">Reevaluar cálculos almacenados</span></div></div>
+            <div class="opt" data-flag="force"><div class="opt-box"></div><div class="opt-content"><div class="opt-top"><span class="opt-flag">-force</span><button class="help-btn" data-help="force">?</button></div><span class="opt-desc" data-i18n="optForce">Sobreescribir archivo destino</span></div></div>
           </div>
-          <p class="note">⚠ -v y -q son incompatibles. Activar uno desactiva el otro automáticamente.</p>
+          <p class="note" data-i18n="optWarn">⚠ -v y -q son incompatibles. Activar uno desactiva el otro automáticamente.</p>
         </div>
       </div>
 
       <!-- LOCALE -->
       <div class="card">
-        <div class="card-head"><span>🌐</span><span class="card-title">Locale del archivo destino</span></div>
+        <div class="card-head"><span>🌐</span><span class="card-title" data-i18n="localeTitle">Locale del archivo destino</span></div>
         <div class="card-body g2">
           <div class="field">
-            <div class="field-lbl"><label>Locale</label><code>-target_locale</code><button class="help-btn" data-help="target_locale">?</button></div>
+            <div class="field-lbl"><label data-i18n="locale">Locale</label><code>-target_locale</code><button class="help-btn" data-help="target_locale">?</button></div>
             <select id="target_locale_select">
               <option value="">— Sin especificar —</option>
               <option value="System">System</option>
@@ -342,7 +354,7 @@ input::placeholder{color:var(--text3);}
             </select>
           </div>
           <div class="field" id="locale-file-field" style="display:none">
-            <div class="field-lbl"><label>Ruta JSON de locale</label></div>
+            <div class="field-lbl"><label data-i18n="localeFilePath">Ruta JSON de locale</label></div>
             <div class="frow">
               <input type="text" id="target_locale_file" placeholder="/ruta/locale.json">
               <button class="btn-browse" data-browse="json" data-target="target_locale_file">…</button>
@@ -353,25 +365,25 @@ input::placeholder{color:var(--text3);}
 
       <!-- PUSHOVER -->
       <div class="card">
-        <div class="card-head"><span>🔔</span><span class="card-title">Notificación Pushover</span></div>
+        <div class="card-head"><span>🔔</span><span class="card-title" data-i18n="pushTitle">Notificación Pushover</span></div>
         <div class="card-body">
           <div class="toggle-row" id="toggle-pushover">
-            <span class="toggle-lbl">Enviar push al móvil al terminar</span>
+            <span class="toggle-lbl" data-i18n="pushToggle">Enviar push al móvil al terminar</span>
             <div class="tog on" id="tog-push"></div>
           </div>
           <div id="pushover-fields">
             <div class="g2" style="margin-bottom:8px">
               <div class="field">
-                <div class="field-lbl"><label>User Key</label><button class="help-btn" data-help="pushover_user">?</button></div>
+                <div class="field-lbl"><label data-i18n="pushUser">User Key</label><button class="help-btn" data-help="pushover_user">?</button></div>
                 <input type="password" id="pushover_user" placeholder="u•••••••••••••••••••••••••••••">
               </div>
               <div class="field">
-                <div class="field-lbl"><label>API Token</label><button class="help-btn" data-help="pushover_token">?</button></div>
+                <div class="field-lbl"><label data-i18n="pushToken">API Token</label><button class="help-btn" data-help="pushover_token">?</button></div>
                 <input type="password" id="pushover_token" placeholder="a•••••••••••••••••••••••••••••">
               </div>
             </div>
             <div class="field">
-              <div class="field-lbl"><label>Mensaje personalizado</label></div>
+              <div class="field-lbl"><label data-i18n="pushMsg">Mensaje personalizado</label></div>
               <input type="text" id="pushover_msg" placeholder="Migración FileMaker completada ✓">
             </div>
           </div>
@@ -380,25 +392,25 @@ input::placeholder{color:var(--text3);}
 
       <!-- COMANDO -->
       <div class="card">
-        <div class="card-head"><span>$_</span><span class="card-title">Comando generado</span></div>
+        <div class="card-head"><span>$_</span><span class="card-title" data-i18n="cmdTitle">Comando generado</span></div>
         <div class="card-body">
           <div class="cmd-box" id="cmd-box">—</div>
           <div class="btn-row">
-            <button class="btn btn-ghost" id="btn-copy">📋 Copiar</button>
-            <button class="btn btn-ghost" id="btn-sh">💾 Guardar .sh</button>
+            <button class="btn btn-ghost" id="btn-copy" data-i18n="copy">📋 Copiar</button>
+            <button class="btn btn-ghost" id="btn-sh" data-i18n="saveSh">💾 Guardar .sh</button>
           </div>
         </div>
         <div class="status">
           <div class="dot" id="status-dot"></div>
-          <span id="status-txt">Listo</span>
+          <span id="status-txt" data-i18n="ready">Listo</span>
         </div>
       </div>
 
       <div class="save-bar">
         <input type="text" id="preset-name" placeholder="Nombre de esta configuración…">
-        <button class="btn btn-ghost" id="btn-save">💾 Guardar</button>
-        <button class="btn btn-ghost" id="btn-export">📤 Exportar JSON</button>
-        <button class="btn btn-ghost" id="btn-import">📥 Importar JSON</button>
+        <button class="btn btn-ghost" id="btn-save" data-i18n="save">💾 Guardar</button>
+        <button class="btn btn-ghost" id="btn-export" data-i18n="exportJson">📤 Exportar JSON</button>
+        <button class="btn btn-ghost" id="btn-import" data-i18n="importJson">📥 Importar JSON</button>
       </div>
 
     </div><!-- /main -->
@@ -445,6 +457,143 @@ var pushoverOn=true;
 var activeHelp=null;
 var logVisible=false;
 var isRunning=false;
+
+// ── INTERNACIONALIZACIÓN ──────────────────────────────────
+var LANG_KEY='fmdm_lang';
+var currentLang=localStorage.getItem(LANG_KEY)||(navigator.language||'es').slice(0,2);
+if(!['es','en','fr'].includes(currentLang)) currentLang='en';
+
+var I18N={
+  es:{
+    version:'Ver versión',run:'▶ Ejecutar',cancel:'■ Cancelar',
+    coffee:'Invita un café al desarrollador',
+    configs:'Configuraciones',noConfigs:'Sin configuraciones',newConfig:'＋ Nueva configuración',
+    execTitle:'Ejecutable FMDataMigration',execLabel:'Ruta del ejecutable',browse:'Examinar…',
+    filesTitle:'Archivos',source:'Fuente',clone:'Clon',target:'Destino',pluginFolder:'Carpeta plugins',
+    credsTitle:'Credenciales',srcAccount:'Cuenta fuente',srcPwd:'Password fuente',cloneAccount:'Cuenta clon',clonePwd:'Password clon',
+    encTitle:'Cifrado (Encryption at Rest)',srcKey:'Clave fuente',cloneKey:'Clave clon',
+    optsTitle:'Opciones',
+    optIgnoreFonts:'No comprobar mapeo de fuentes',optIgnoreAccounts:'Usar cuentas del clon',optIgnoreValuelists:'Usar listas de valores del clon',
+    optVerbose:'Informe detallado del proceso',optQuiet:'Sin informe. Incompatible con -v',optRebuild:'Reconstruir índices',
+    optReevaluate:'Reevaluar cálculos almacenados',optForce:'Sobreescribir archivo destino',
+    optWarn:'⚠ -v y -q son incompatibles. Activar uno desactiva el otro automáticamente.',
+    localeTitle:'Locale del archivo destino',locale:'Locale',localeNone:'— Sin especificar —',localeFile:'Ruta a fichero JSON…',localeFilePath:'Ruta JSON de locale',
+    pushTitle:'Notificación Pushover',pushToggle:'Enviar push al móvil al terminar',pushUser:'User Key',pushToken:'API Token',pushMsg:'Mensaje personalizado',
+    cmdTitle:'Comando generado',cmdPlaceholder:'Especifica la ruta del ejecutable para generar el comando',
+    copy:'📋 Copiar',saveSh:'💾 Guardar .sh',
+    ready:'Listo',presetName:'Nombre de esta configuración…',save:'💾 Guardar',exportJson:'📤 Exportar JSON',importJson:'📥 Importar JSON',
+    errExec:'Falta el ejecutable',errExecMsg:'Especifica la ruta de FMDataMigration',
+    errSrc:'Falta -src_path',errSrcMsg:'-src_path es obligatorio',
+    errClone:'Falta -clone_path',errCloneMsg:'-clone_path es obligatorio',
+    errElectron:'Solo en la app',errElectronMsg:'La ejecución directa requiere la app Electron',
+    migrating:'Migración en curso…',running:'Ejecutando…',
+    startMsg:'▶ Iniciando migración FileMaker…',srcLabel:'  Fuente : ',cloneLabel:'  Clon   : ',
+    errPrefix:'✗ Error: ',successMsg:'✓ Migración completada en ','seconds':' segundos',
+    errorCode:'Código de error: ',cancelled:'Cancelada',cancelledMsg:'⚠ Migración cancelada por el usuario',
+    completedIn:'Completada en ',' s':' s',
+    notifOk:'Migración completada',notifFail:'Migración fallida',notifExit:'Código de salida: ',
+    pushSent:'✓ Notificación Pushover enviada',pushFail:'⚠ No se pudo enviar el push: ',
+    copied:'Copiado',copiedMsg:'Pégalo en Terminal',
+    scriptSaved:'Script guardado',scriptDownloaded:'Script descargado',scriptHint:'chmod +x fm_migrate.sh && ./fm_migrate.sh',
+    loaded:'Cargado',updated:'Actualizado',saved:'Guardado',deleted:'Eliminado',
+    errName:'Falta nombre',errNameMsg:'Escribe un nombre',
+    confirmDelete:'¿Eliminar "',confirmDeleteEnd:'"?',
+    exported:'Exportado',importError:'Error al importar',importErrorMsg:'JSON no válido',
+    required:'Obligatorio',optional:'Opcional',descTitle:'Descripción',locations:'Ubicaciones',
+    docLink:'📖 Documentación oficial Claris ↗',
+    onlyEncrypted:'Solo si el archivo está cifrado',defaultAdmin:'admin (por defecto)'
+  },
+  en:{
+    version:'Version',run:'▶ Run',cancel:'■ Cancel',
+    coffee:'Buy Dev a Coffee',
+    configs:'Configurations',noConfigs:'No configurations',newConfig:'＋ New configuration',
+    execTitle:'FMDataMigration Executable',execLabel:'Executable path',browse:'Browse…',
+    filesTitle:'Files',source:'Source',clone:'Clone',target:'Target',pluginFolder:'Plugin folder',
+    credsTitle:'Credentials',srcAccount:'Source account',srcPwd:'Source password',cloneAccount:'Clone account',clonePwd:'Clone password',
+    encTitle:'Encryption at Rest',srcKey:'Source key',cloneKey:'Clone key',
+    optsTitle:'Options',
+    optIgnoreFonts:'Skip font mapping check',optIgnoreAccounts:'Use clone accounts',optIgnoreValuelists:'Use clone value lists',
+    optVerbose:'Detailed process report',optQuiet:'No report. Incompatible with -v',optRebuild:'Rebuild indexes',
+    optReevaluate:'Reevaluate stored calculations',optForce:'Overwrite target file',
+    optWarn:'⚠ -v and -q are incompatible. Enabling one disables the other.',
+    localeTitle:'Target file locale',locale:'Locale',localeNone:'— Not specified —',localeFile:'Path to JSON file…',localeFilePath:'Locale JSON path',
+    pushTitle:'Pushover Notification',pushToggle:'Send push to mobile when done',pushUser:'User Key',pushToken:'API Token',pushMsg:'Custom message',
+    cmdTitle:'Generated command',cmdPlaceholder:'Specify executable path to generate command',
+    copy:'📋 Copy',saveSh:'💾 Save .sh',
+    ready:'Ready',presetName:'Configuration name…',save:'💾 Save',exportJson:'📤 Export JSON',importJson:'📥 Import JSON',
+    errExec:'Missing executable',errExecMsg:'Specify FMDataMigration path',
+    errSrc:'Missing -src_path',errSrcMsg:'-src_path is required',
+    errClone:'Missing -clone_path',errCloneMsg:'-clone_path is required',
+    errElectron:'App only',errElectronMsg:'Direct execution requires Electron app',
+    migrating:'Migration in progress…',running:'Running…',
+    startMsg:'▶ Starting FileMaker migration…',srcLabel:'  Source: ',cloneLabel:'  Clone : ',
+    errPrefix:'✗ Error: ',successMsg:'✓ Migration completed in ','seconds':' seconds',
+    errorCode:'Error code: ',cancelled:'Cancelled',cancelledMsg:'⚠ Migration cancelled by user',
+    completedIn:'Completed in ',' s':' s',
+    notifOk:'Migration completed',notifFail:'Migration failed',notifExit:'Exit code: ',
+    pushSent:'✓ Pushover notification sent',pushFail:'⚠ Could not send push: ',
+    copied:'Copied',copiedMsg:'Paste in Terminal',
+    scriptSaved:'Script saved',scriptDownloaded:'Script downloaded',scriptHint:'chmod +x fm_migrate.sh && ./fm_migrate.sh',
+    loaded:'Loaded',updated:'Updated',saved:'Saved',deleted:'Deleted',
+    errName:'Missing name',errNameMsg:'Enter a name',
+    confirmDelete:'Delete "',confirmDeleteEnd:'"?',
+    exported:'Exported',importError:'Import error',importErrorMsg:'Invalid JSON',
+    required:'Required',optional:'Optional',descTitle:'Description',locations:'Locations',
+    docLink:'📖 Official Claris documentation ↗',
+    onlyEncrypted:'Only if file is encrypted',defaultAdmin:'admin (default)'
+  },
+  fr:{
+    version:'Version',run:'▶ Exécuter',cancel:'■ Annuler',
+    coffee:'Offrir un café au développeur',
+    configs:'Configurations',noConfigs:'Aucune configuration',newConfig:'＋ Nouvelle configuration',
+    execTitle:'Exécutable FMDataMigration',execLabel:'Chemin de l\'exécutable',browse:'Parcourir…',
+    filesTitle:'Fichiers',source:'Source',clone:'Clone',target:'Destination',pluginFolder:'Dossier plugins',
+    credsTitle:'Identifiants',srcAccount:'Compte source',srcPwd:'Mot de passe source',cloneAccount:'Compte clone',clonePwd:'Mot de passe clone',
+    encTitle:'Chiffrement (Encryption at Rest)',srcKey:'Clé source',cloneKey:'Clé clone',
+    optsTitle:'Options',
+    optIgnoreFonts:'Ignorer le mappage des polices',optIgnoreAccounts:'Utiliser les comptes du clone',optIgnoreValuelists:'Utiliser les listes de valeurs du clone',
+    optVerbose:'Rapport détaillé du processus',optQuiet:'Sans rapport. Incompatible avec -v',optRebuild:'Reconstruire les index',
+    optReevaluate:'Réévaluer les calculs stockés',optForce:'Écraser le fichier destination',
+    optWarn:'⚠ -v et -q sont incompatibles. Activer l\'un désactive l\'autre.',
+    localeTitle:'Locale du fichier destination',locale:'Locale',localeNone:'— Non spécifié —',localeFile:'Chemin vers fichier JSON…',localeFilePath:'Chemin JSON locale',
+    pushTitle:'Notification Pushover',pushToggle:'Envoyer push au mobile à la fin',pushUser:'User Key',pushToken:'API Token',pushMsg:'Message personnalisé',
+    cmdTitle:'Commande générée',cmdPlaceholder:'Spécifiez le chemin de l\'exécutable pour générer la commande',
+    copy:'📋 Copier',saveSh:'💾 Enregistrer .sh',
+    ready:'Prêt',presetName:'Nom de cette configuration…',save:'💾 Enregistrer',exportJson:'📤 Exporter JSON',importJson:'📥 Importer JSON',
+    errExec:'Exécutable manquant',errExecMsg:'Spécifiez le chemin de FMDataMigration',
+    errSrc:'-src_path manquant',errSrcMsg:'-src_path est obligatoire',
+    errClone:'-clone_path manquant',errCloneMsg:'-clone_path est obligatoire',
+    errElectron:'App uniquement',errElectronMsg:'L\'exécution directe nécessite l\'app Electron',
+    migrating:'Migration en cours…',running:'En cours…',
+    startMsg:'▶ Démarrage de la migration FileMaker…',srcLabel:'  Source: ',cloneLabel:'  Clone : ',
+    errPrefix:'✗ Erreur: ',successMsg:'✓ Migration terminée en ','seconds':' secondes',
+    errorCode:'Code d\'erreur: ',cancelled:'Annulée',cancelledMsg:'⚠ Migration annulée par l\'utilisateur',
+    completedIn:'Terminée en ',' s':' s',
+    notifOk:'Migration terminée',notifFail:'Migration échouée',notifExit:'Code de sortie: ',
+    pushSent:'✓ Notification Pushover envoyée',pushFail:'⚠ Impossible d\'envoyer le push: ',
+    copied:'Copié',copiedMsg:'Collez dans Terminal',
+    scriptSaved:'Script enregistré',scriptDownloaded:'Script téléchargé',scriptHint:'chmod +x fm_migrate.sh && ./fm_migrate.sh',
+    loaded:'Chargé',updated:'Mis à jour',saved:'Enregistré',deleted:'Supprimé',
+    errName:'Nom manquant',errNameMsg:'Entrez un nom',
+    confirmDelete:'Supprimer "',confirmDeleteEnd:'" ?',
+    exported:'Exporté',importError:'Erreur d\'import',importErrorMsg:'JSON invalide',
+    required:'Obligatoire',optional:'Optionnel',descTitle:'Description',locations:'Emplacements',
+    docLink:'📖 Documentation officielle Claris ↗',
+    onlyEncrypted:'Seulement si le fichier est chiffré',defaultAdmin:'admin (par défaut)'
+  }
+};
+
+function t(key){return I18N[currentLang][key]||I18N.en[key]||key;}
+
+function applyLang(){
+  document.querySelectorAll('[data-i18n]').forEach(function(el){
+    var key=el.dataset.i18n;
+    if(el.tagName==='INPUT'&&el.placeholder) el.placeholder=t(key);
+    else el.textContent=t(key);
+  });
+  $('lang-select').value=currentLang;
+  updateCommand();
+}
 
 function $(id){return document.getElementById(id);}
 function val(id){var el=$(id);return el?el.value.trim():'';}
@@ -885,6 +1034,23 @@ function notify(type,title,msg){
 
 renderPresets();
 updateCommand();
+
+// ── IDIOMA ────────────────────────────────────────────────
+$('lang-select').addEventListener('change',function(){
+  currentLang=this.value;
+  localStorage.setItem(LANG_KEY,currentLang);
+  applyLang();
+});
+applyLang();
+
+// ── COFFEE LINK ───────────────────────────────────────────
+$('coffee-link').addEventListener('click',function(){
+  if(window.electronAPI){
+    window.electronAPI.openExternal('https://buymeacoffee.com/angelbonet');
+  } else {
+    window.open('https://buymeacoffee.com/angelbonet','_blank');
+  }
+});
 })();
 </script>
 </body>

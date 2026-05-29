@@ -1,10 +1,124 @@
-const { app, BrowserWindow, ipcMain, dialog, shell, Notification } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, shell, Notification, Menu } = require('electron');
 const { spawn } = require('child_process');
 const path = require('path');
 const fs = require('fs');
 
 let mainWindow;
 let migrationProcess = null;
+
+// ── Menú de la aplicación ────────────────────────────────
+function createMenu() {
+  const isMac = process.platform === 'darwin';
+
+  const template = [
+    ...(isMac ? [{
+      label: app.name,
+      submenu: [
+        { role: 'about', label: 'Acerca de FMDataMigration Assistant' },
+        { type: 'separator' },
+        { role: 'services' },
+        { type: 'separator' },
+        { role: 'hide', label: 'Ocultar' },
+        { role: 'hideOthers', label: 'Ocultar otros' },
+        { role: 'unhide', label: 'Mostrar todo' },
+        { type: 'separator' },
+        { role: 'quit', label: 'Salir' }
+      ]
+    }] : []),
+    {
+      label: 'Archivo',
+      submenu: [
+        isMac ? { role: 'close', label: 'Cerrar' } : { role: 'quit', label: 'Salir' }
+      ]
+    },
+    {
+      label: 'Edición',
+      submenu: [
+        { role: 'undo', label: 'Deshacer' },
+        { role: 'redo', label: 'Rehacer' },
+        { type: 'separator' },
+        { role: 'cut', label: 'Cortar' },
+        { role: 'copy', label: 'Copiar' },
+        { role: 'paste', label: 'Pegar' },
+        { role: 'selectAll', label: 'Seleccionar todo' }
+      ]
+    },
+    {
+      label: 'Ventana',
+      submenu: [
+        { role: 'minimize', label: 'Minimizar' },
+        { role: 'zoom', label: 'Zoom' },
+        ...(isMac ? [
+          { type: 'separator' },
+          { role: 'front', label: 'Traer todo al frente' }
+        ] : [
+          { role: 'close', label: 'Cerrar' }
+        ])
+      ]
+    },
+    {
+      label: 'Ayuda',
+      submenu: [
+        {
+          label: 'Documentación FMDataMigration',
+          click: () => shell.openExternal('https://help.claris.com/en/data-migration-tool-guide/content/index.html')
+        },
+        { type: 'separator' },
+        {
+          label: 'Sitio web del autor',
+          click: () => shell.openExternal('https://abdatabase.com')
+        },
+        {
+          label: 'Contactar',
+          click: () => shell.openExternal('mailto:abdatabase@abdatabase.com')
+        },
+        { type: 'separator' },
+        {
+          label: '☕ Invítame a un café',
+          click: () => shell.openExternal('https://buymeacoffee.com/angelbonet')
+        },
+        ...(!isMac ? [
+          { type: 'separator' },
+          {
+            label: 'Acerca de',
+            click: () => showAboutDialog()
+          }
+        ] : [])
+      ]
+    }
+  ];
+
+  const menu = Menu.buildFromTemplate(template);
+  Menu.setApplicationMenu(menu);
+}
+
+function showAboutDialog() {
+  dialog.showMessageBox(mainWindow, {
+    type: 'info',
+    title: 'Acerca de FMDataMigration Assistant',
+    message: 'FMDataMigration Assistant',
+    detail: `Versión 1.0.0
+
+Interfaz gráfica para Claris FileMaker Data Migration Tool
+
+Desarrollado por Angel Bonet
+abdatabase.com
+abdatabase@abdatabase.com
+
+© 2025 Angel Bonet. Todos los derechos reservados.`,
+    buttons: ['OK']
+  });
+}
+
+// Sobrescribir el diálogo "Acerca de" de macOS
+app.setAboutPanelOptions({
+  applicationName: 'FMDataMigration Assistant',
+  applicationVersion: '1.0.0',
+  version: '1.0.0',
+  copyright: '© 2025 Angel Bonet\nabdatabase.com\nabdatabase@abdatabase.com',
+  credits: 'Interfaz gráfica para Claris FileMaker Data Migration Tool\n\nDesarrollado por Angel Bonet\nhttps://abdatabase.com',
+  website: 'https://abdatabase.com'
+});
 
 function createWindow() {
   mainWindow = new BrowserWindow({
@@ -32,6 +146,7 @@ function createWindow() {
 }
 
 app.whenReady().then(() => {
+  createMenu();
   createWindow();
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();
@@ -153,3 +268,6 @@ ipcMain.handle('save-script', async (event, scriptContent) => {
 
 // ── Info de plataforma ───────────────────────────────────
 ipcMain.handle('get-platform', () => process.platform);
+
+// ── Abrir enlaces externos ───────────────────────────────
+ipcMain.handle('open-external', (event, url) => shell.openExternal(url));

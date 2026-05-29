@@ -17,4 +17,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   // Info
   getPlatform: () => ipcRenderer.invoke('get-platform'),
+
+  // Abrir enlaces externos
+  openExternal: (url) => ipcRenderer.invoke('open-external', url),
 });

@@ -13,30 +13,58 @@
     "appId": "com.angelbonet.fmdatamigration-assistant",
     "productName": "FMDataMigration Assistant",
     "copyright": "Copyright © 2025 angelbonet",
-    "files": ["src/**/*"],
+    "files": [
+      "src/**/*"
+    ],
     "mac": {
       "category": "public.app-category.developer-tools",
       "icon": "build/icon.icns",
-      "target": [{"target": "dmg", "arch": ["x64", "arm64"]}],
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        }
+      ],
       "darkModeSupport": true
     },
     "win": {
       "icon": "build/icon.ico",
-      "target": [{"target": "nsis", "arch": ["x64"]}]
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
     },
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
-      "installerLanguages": ["es_ES", "en_US"],
+      "installerLanguages": [
+        "es_ES",
+        "en_US"
+      ],
       "language": "3082"
     },
     "dmg": {
       "title": "FMDataMigration Assistant",
       "background": null,
-      "window": {"width": 540, "height": 380}
+      "window": {
+        "width": 540,
+        "height": 380
+      }
     }
   },
-  "keywords": ["filemaker", "claris", "migration", "fmdatamigration"],
+  "keywords": [
+    "filemaker",
+    "claris",
+    "migration",
+    "fmdatamigration"
+  ],
   "author": "angelbonet",
   "license": "MIT",
   "devDependencies": {
