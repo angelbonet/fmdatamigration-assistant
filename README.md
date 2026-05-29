@@ -8,6 +8,8 @@ Interfaz gráfica para la herramienta de línea de comandos **Claris FileMaker D
 
 App de escritorio multiplataforma (macOS, Windows) construida con Electron. Sin servidores, sin dependencias externas en tiempo de ejecución. Ejecuta la migración directamente desde la interfaz y muestra el output en tiempo real.
 
+![FMDataMigration Assistant](images/mainES.png)
+
 ---
 
 ## Características

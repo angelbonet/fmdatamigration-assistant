@@ -8,6 +8,8 @@ Graphical interface for the **Claris FileMaker Data Migration Tool** command-lin
 
 Cross-platform desktop app (macOS, Windows) built with Electron. No servers, no runtime dependencies. Run migrations directly from the interface with real-time output.
 
+![FMDataMigration Assistant](images/mainEN.png)
+
 ---
 
 ## Features

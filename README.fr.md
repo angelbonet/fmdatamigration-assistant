@@ -8,6 +8,8 @@ Interface graphique pour l'outil en ligne de commande **Claris FileMaker Data Mi
 
 Application de bureau multiplateforme (macOS, Windows) construite avec Electron. Sans serveur, sans dépendances externes. Exécutez les migrations directement depuis l'interface avec sortie en temps réel.
 
+![FMDataMigration Assistant](images/mainFR.png)
+
 ---
 
 ## Fonctionnalités
